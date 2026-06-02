@@ -49,6 +49,7 @@ pipeline {
             steps {
                 sh "docker builder prune -af || true"
                 sh "docker image prune -f || true"
+                sh "docker system prune -a -f"
                 sh 'docker rmi hello-world:latest || true'
                 sh 'docker build -t hello-world:latest .'
             }
