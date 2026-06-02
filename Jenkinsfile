@@ -96,11 +96,11 @@ pipeline {
             credentialsId: 'aws-cred'
         ]]) {
 
-            sh '''
-                aws eks update-kubeconfig --region us-east-1 --name demo-cluster
+           sh '''
+    aws eks update-kubeconfig --region us-east-1 --name demo-cluster
 
-                kubectl apply -f k8s
-            '''
+    kubectl apply -f k8s
+'''
         }
     }
   }
