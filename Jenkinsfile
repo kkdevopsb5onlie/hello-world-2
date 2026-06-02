@@ -9,7 +9,7 @@ pipeline {
 
     stages {
 
-        stage('Build') {
+        stage('Mavan compile') {
             steps {
                 sh 'mvn clean compile'
             }
@@ -21,11 +21,6 @@ pipeline {
             }
         }
 
-        stage('Package') {
-            steps {
-                sh 'mvn package'
-            }
-        }
 
         stage('SonarQube Analysis') {
             steps {
@@ -35,9 +30,18 @@ pipeline {
             }
         }
 
+        stage('Build') {
+            steps {
+                sh 'mvn package'
+            }
+        }
+
         stage('Trivy File System Scan') {
             steps {
-                sh 'trivy fs .'
+                 sh '''
+                    mkdir -p trivy-report
+                   trivy fs --format html  --output trivy-report/fs-report.html .
+                 '''
             }
         }
 
@@ -52,12 +56,17 @@ pipeline {
 
         stage('Trivy Image Scan') {
             steps {
-                sh '''
-                mkdir -p /opt/trivy-cache
-                TMPDIR=/opt/trivy-cache trivy image \
-                  --cache-dir /opt/trivy-cache \
-                  --scanners vuln hello-world:latest
-                '''
+            sh '''
+                mkdir -p trivy-cache
+                mkdir -p trivy-report
+        
+                TMPDIR=trivy-cache trivy image \
+                  --cache-dir trivy-cache \
+                  --scanners vuln \
+                  --format html \
+                  --output trivy-report/image-report.html \
+                  hello-world:latest
+            '''
             }
         }
     }
@@ -66,6 +75,7 @@ pipeline {
     post {
 
         always {
+            archiveArtifacts artifacts: 'trivy-report/*', fingerprint: true
             echo 'Cleaning workspace...'
             cleanWs()
         }
