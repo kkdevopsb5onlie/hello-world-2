@@ -40,7 +40,7 @@ pipeline {
             steps {
                  sh '''
                     mkdir -p trivy-report
-                   trivy fs --format html  --output trivy-report/fs-report.html .
+                   trivy fs --format table  --output trivy-report/fs-report.txt .
                  '''
             }
         }
@@ -63,8 +63,8 @@ pipeline {
                 TMPDIR=trivy-cache trivy image \
                   --cache-dir trivy-cache \
                   --scanners vuln \
-                  --format html \
-                  --output trivy-report/image-report.html \
+                  --format table \
+                  --output trivy-report/image-report.txt \
                   hello-world:latest
             '''
             }
