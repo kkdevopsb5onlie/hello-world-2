@@ -2,6 +2,8 @@ FROM eclipse-temurin:17-jre
 
 WORKDIR /app
 
-COPY . .
+# copy jar from target folder
+COPY target/*.jar app.jar
 
-CMD ["java", "-version"]
+# run the application
+ENTRYPOINT ["java", "-jar", "app.jar"]
