@@ -1,9 +1,13 @@
-FROM eclipse-temurin:17-jre
+FROM tomcat:9.0
 
-WORKDIR /app
+# Remove default apps
+RUN rm -rf /usr/local/tomcat/webapps/*
 
-# copy jar from target folder
-COPY target/*.jar app.jar
+# Copy WAR file into Tomcat
+COPY target/hello-web.war /usr/local/tomcat/webapps/ROOT.war
 
-# run the application
-ENTRYPOINT ["java", "-jar", "app.jar"]
+# Expose Tomcat port
+EXPOSE 8080
+
+# Start Tomcat
+CMD ["catalina.sh", "run"]
