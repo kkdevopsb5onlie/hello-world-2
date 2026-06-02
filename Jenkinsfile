@@ -40,7 +40,7 @@ pipeline {
             steps {
                  sh '''
                     mkdir -p trivy-report
-                   trivy fs --format table  --output trivy-report/fs-report.txt .
+                    trivy fs --format table -o trivy-report/fs-report.txt .
                  '''
             }
         }
@@ -57,19 +57,8 @@ pipeline {
         stage('Trivy Image Scan') {
             steps {
               sh '''
-                rm -rf trivy-cache trivy-report
-                mkdir -p trivy-cache
-                mkdir -p trivy-report
-        
-                export TMPDIR=$PWD/trivy-cache
-        
-                trivy image \
-                  --cache-dir $PWD/trivy-cache \
-                  --scanners vuln \
-                  --format table \
-                  --output trivy-report/image-report.txt \
-                  hello-world:latest
-            '''
+               trivy image --format table -o trivy-report/image-report.txt hello-world:latest
+              '''
             }
         }
     }
