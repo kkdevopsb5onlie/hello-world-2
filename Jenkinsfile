@@ -99,10 +99,11 @@ pipeline {
         ]]) {
 
            sh '''
-    aws eks update-kubeconfig --region us-east-1 --name demo-cluster
-
-    kubectl apply -f k8s
-'''
+           sed -i "s|image:.*|image: dharimigariarjun/hello-web:${BUILD_NUMBER}|g" k8s/k8s/deployment.yaml
+           cat k8s/k8s/deployment.yaml
+           aws eks update-kubeconfig --region us-east-1 --name demo-cluster
+           kubectl apply -f k8s
+         '''
         }
     }
   }
