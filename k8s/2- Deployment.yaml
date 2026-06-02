@@ -2,8 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: hello-app
-  labels:
-    app: hello-app
+  namespace: dev
 
 spec:
   replicas: 2
@@ -18,8 +17,9 @@ spec:
 
     spec:
       containers:
-      - name: hello-app
-        image:dharimigariarjun/hello-world:latest
-        imagePullPolicy: IfNotPresent
+        - name: hello-app
+          image: dharimigariarjun/hello-world:latest
+          ports:
+            - containerPort: 8080
         ports:
         - containerPort: 8080
