@@ -18,6 +18,6 @@ spec:
     spec:
       containers:
         - name: hello-app
-          image: dharimigariarjun/hello-world:latest
+          image: dharimigariarjun/hello-world:47
           ports:
             - containerPort: 8080
