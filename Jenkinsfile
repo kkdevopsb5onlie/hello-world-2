@@ -9,7 +9,7 @@ pipeline {
 
     stages {
 
-        stage('Mavan compile') {
+        stage('Maven Compile') {
             steps {
                 sh 'mvn clean compile'
             }
@@ -20,7 +20,6 @@ pipeline {
                 sh 'mvn test'
             }
         }
-
 
         stage('SonarQube Analysis') {
             steps {
@@ -38,48 +37,59 @@ pipeline {
 
         stage('Trivy File System Scan') {
             steps {
-                 sh '''
+                sh '''
                     mkdir -p trivy-report
                     trivy fs --format table -o trivy-report/fs-report.txt .
-                 '''
+                '''
             }
         }
 
         stage('Docker Build') {
             steps {
-                sh "docker builder prune -af || true"
-                sh "docker image prune -f || true"
-                sh "docker system prune -a -f"
-                sh 'docker rmi hello-world:latest || true'
-                sh 'docker build -t hello-world:latest .'
+                sh '''
+                    docker builder prune -f || true
+                    docker image prune -f || true
+                    docker build -t hello-world:latest .
+                '''
             }
         }
 
         stage('Trivy Image Scan') {
             steps {
-                
-              sh '''
-                  mkdir -p /var/trivy-cache
-                  trivy image \
-                  --cache-dir /var/trivy-cache \
-                  --scanners vuln \
-                  --format table \
-                  -o trivy-report/image-report.txt \
-              hello-world:latest
-              '''
+                sh '''
+                    mkdir -p /var/trivy-cache
+                    trivy image \
+                        --cache-dir /var/trivy-cache \
+                        --scanners vuln \
+                        --format table \
+                        -o trivy-report/image-report.txt \
+                        hello-world:latest
+                '''
             }
         }
 
-        stage('Push Docker Image') {
+        stage('Docker Push') {
             steps {
                 script {
-                    withDockerRegistry(credentialsId: 'docker-cred') {
-                        sh 'docker push dharimigariarjun/hello-world:latest'
+                    withCredentials([usernamePassword(
+                        credentialsId: 'docker-cred',
+                        usernameVariable: 'DOCKER_USER',
+                        passwordVariable: 'DOCKER_PASS'
+                    )]) {
+
+                        sh '''
+                            echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin
+
+                            docker tag hello-world:latest $DOCKER_USER/hello-world:latest
+
+                            docker push $DOCKER_USER/hello-world:latest
+                        '''
                     }
                 }
-           }
+            }
+        }
+    }
 
-    // ✅ POST ACTIONS (IMPORTANT)
     post {
 
         always {
