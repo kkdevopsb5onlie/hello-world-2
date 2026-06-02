@@ -21,5 +21,3 @@ spec:
           image: dharimigariarjun/hello-world:latest
           ports:
             - containerPort: 8080
-        ports:
-        - containerPort: 8080
