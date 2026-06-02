@@ -49,7 +49,7 @@ pipeline {
                 sh '''
                     docker builder prune -f || true
                     docker image prune -f || true
-                    docker build -t hello-world:latest .
+                    docker build -t hello-world:${BUILD_NUMBER} .
                 '''
             }
         }
@@ -63,7 +63,7 @@ pipeline {
                         --scanners vuln \
                         --format table \
                         -o trivy-report/image-report.txt \
-                        hello-world:latest
+                        hello-world:${BUILD_NUMBER}
                 '''
             }
         }
@@ -80,9 +80,32 @@ pipeline {
                         sh '''
                             echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin
 
-                            docker tag hello-world:latest $DOCKER_USER/hello-world:latest
+                            docker tag hello-world:${BUILD_NUMBER} $DOCKER_USER/hello-world:${BUILD_NUMBER}
 
-                            docker push $DOCKER_USER/hello-world:latest
+                            docker push $DOCKER_USER/hello-world:${BUILD_NUMBER}
+                        '''
+                    }
+                }
+            }
+        }
+
+        stage('Deploy to EKS') {
+            steps {
+                script {
+                    withCredentials([usernamePassword(
+                        credentialsId: 'aws-cred',
+                        usernameVariable: 'AWS_ACCESS_KEY_ID',
+                        passwordVariable: 'AWS_SECRET_ACCESS_KEY'
+                    )]) {
+
+                        sh '''
+                            aws configure set aws_access_key_id $AWS_ACCESS_KEY_ID
+                            aws configure set aws_secret_access_key $AWS_SECRET_ACCESS_KEY
+                            aws configure set region us-east-1
+
+                            aws eks update-kubeconfig --region us-east-1 --name demo-cluster
+
+                            kubectl apply -f k8s
                         '''
                     }
                 }
@@ -94,12 +117,11 @@ pipeline {
 
         always {
             archiveArtifacts artifacts: 'trivy-report/*', fingerprint: true
-            echo 'Cleaning workspace...'
             cleanWs()
         }
 
         success {
-            echo 'Pipeline SUCCESS - Build completed'
+            echo 'Pipeline SUCCESS - Deployment completed'
         }
 
         failure {
@@ -107,7 +129,7 @@ pipeline {
         }
 
         unstable {
-            echo 'Pipeline UNSTABLE - tests or scans failed'
+            echo 'Pipeline UNSTABLE - issues detected'
         }
     }
 }
