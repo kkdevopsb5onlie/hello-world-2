@@ -56,12 +56,15 @@ pipeline {
 
         stage('Trivy Image Scan') {
             steps {
-            sh '''
+              sh '''
+                rm -rf trivy-cache trivy-report
                 mkdir -p trivy-cache
                 mkdir -p trivy-report
         
-                TMPDIR=trivy-cache trivy image \
-                  --cache-dir trivy-cache \
+                export TMPDIR=$PWD/trivy-cache
+        
+                trivy image \
+                  --cache-dir $PWD/trivy-cache \
                   --scanners vuln \
                   --format table \
                   --output trivy-report/image-report.txt \
