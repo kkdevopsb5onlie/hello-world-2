@@ -89,30 +89,22 @@ pipeline {
             }
         }
 
-        stage('Deploy to EKS') {
-            steps {
-                script {
-                    withCredentials([usernamePassword(
-                        credentialsId: 'aws-cred',
-                        usernameVariable: 'AWS_ACCESS_KEY_ID',
-                        passwordVariable: 'AWS_SECRET_ACCESS_KEY'
-                    )]) {
+       stage('Deploy to EKS') {
+    steps {
+        withCredentials([[
+            $class: 'AmazonWebServicesCredentialsBinding',
+            credentialsId: 'aws-cred'
+        ]]) {
 
-                        sh '''
-                            aws configure set aws_access_key_id $AWS_ACCESS_KEY_ID
-                            aws configure set aws_secret_access_key $AWS_SECRET_ACCESS_KEY
-                            aws configure set region us-east-1
+            sh '''
+                aws eks update-kubeconfig --region us-east-1 --name demo-cluster
 
-                            aws eks update-kubeconfig --region us-east-1 --name demo-cluster
-
-                            kubectl apply -f k8s
-                        '''
-                    }
-                }
-            }
+                kubectl apply -f k8s
+            '''
         }
     }
-
+  }
+    }
     post {
 
         always {
