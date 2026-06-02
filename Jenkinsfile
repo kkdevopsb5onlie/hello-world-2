@@ -57,7 +57,7 @@ pipeline {
         stage('Trivy Image Scan') {
             steps {
               sh '''
-               trivy image --format table -o trivy-report/image-report.txt hello-world:latest
+              trivy image --scanners vuln --format table -o trivy-report/image-report.txt hello-world:latest
               '''
             }
         }
