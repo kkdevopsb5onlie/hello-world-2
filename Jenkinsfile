@@ -69,7 +69,15 @@ pipeline {
               '''
             }
         }
-    }
+
+        stage('Push Docker Image') {
+            steps {
+                script {
+                    withDockerRegistry(credentialsId: 'docker-cred') {
+                        sh 'docker push dharimigariarjun/hello-world:latest'
+                    }
+                }
+           }
 
     // ✅ POST ACTIONS (IMPORTANT)
     post {
