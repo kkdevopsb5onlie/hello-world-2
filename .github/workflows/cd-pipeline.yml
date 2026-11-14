@@ -33,6 +33,7 @@ jobs:
   # QA Deployment
   deploy-qa:
     name: Deploy to QA
+    runs-on: ubuntu-latest
     environment: qa
     steps:
       - name: Download Build Artifact
