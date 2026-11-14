@@ -69,7 +69,6 @@ jobs:
     needs: maven-build
     name: Deploy to DEV
     if: >
-      github.event.workflow_run.conclusion == 'success' &&
       github.event.workflow_run.head_branch == 'develop'
     runs-on: ubuntu-latest
     environment: dev
@@ -93,7 +92,6 @@ jobs:
     name: Deploy to QA
     needs: maven-build
     if: >
-      github.event.workflow_run.conclusion == 'success' &&
       github.event.workflow_run.head_branch == 'qa'
     runs-on: ubuntu-latest
     environment: qa
@@ -117,7 +115,6 @@ jobs:
     name: Deploy to Production
     needs: maven-build
     if: >
-      github.event.workflow_run.conclusion == 'success' &&
       github.event.workflow_run.head_branch == 'main'
     runs-on: ubuntu-latest
     environment: production
