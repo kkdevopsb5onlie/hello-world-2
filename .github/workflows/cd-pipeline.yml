@@ -1,0 +1,103 @@
+
+name: Maven CD Pipeline
+
+on:
+  push:
+    branches:
+      - develop
+      - qa
+      - uat
+      - main
+jobs:
+
+  # DEV Deployment
+  deploy-dev:
+    name: Deploy to DEV
+    if: >
+      github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.head_branch == 'develop'
+    runs-on: ubuntu-latest
+    environment: dev
+
+    steps:
+      - name: Download Build Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: maven-build
+          path: ./artifact
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          run-id: ${{ github.event.workflow_run.id }}
+
+      - name: Deploy to DEV
+        run: |
+          echo "Deploying application to DEV"
+          ls -l ./artifact
+
+  # QA Deployment
+  deploy-qa:
+    name: Deploy to QA
+    if: >
+      github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.head_branch == 'qa'
+    runs-on: ubuntu-latest
+    environment: qa
+
+    steps:
+      - name: Download Build Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: maven-build
+          path: ./artifact
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          run-id: ${{ github.event.workflow_run.id }}
+
+      - name: Deploy to QA
+        run: |
+          echo "Deploying application to QA"
+          ls -l ./artifact
+
+  # UAT Deployment
+  deploy-uat:
+    name: Deploy to UAT
+    if: >
+      github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.head_branch == 'uat'
+    runs-on: ubuntu-latest
+    environment: uat
+
+    steps:
+      - name: Download Build Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: maven-build
+          path: ./artifact
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          run-id: ${{ github.event.workflow_run.id }}
+
+      - name: Deploy to UAT
+        run: |
+          echo "Deploying application to UAT"
+          ls -l ./artifact
+
+  # Production Deployment
+  deploy-prod:
+    name: Deploy to Production
+    if: >
+      github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.head_branch == 'main'
+    runs-on: ubuntu-latest
+    environment: production
+
+    steps:
+      - name: Download Build Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: maven-build
+          path: ./artifact
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          run-id: ${{ github.event.workflow_run.id }}
+
+      - name: Deploy to Production
+        run: |
+          echo "Deploying application to Production"
+          ls -l ./artifact
