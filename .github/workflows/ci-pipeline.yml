@@ -1,134 +1,138 @@
-name: github action ci/cd pipline 
+
+name: Maven CI/CD Pipeline
+
 on:
   push:
     branches:
-      - feature/*
+      - 'feature/*'
       - develop
       - qa
+      - uat
       - main
 
 jobs:
+
+  # CI Stage 1: Maven Test
   maven-test:
     name: Maven Test
     runs-on: ubuntu-latest
 
     steps:
-      # Step 1: Checkout source code
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      # Step 2: Set up Java
       - name: Setup JDK 17
         uses: actions/setup-java@v4
         with:
           java-version: '17'
-          distribution: 'temurin'
+          distribution: temurin
           cache: maven
 
-
-      # Step 4: Compile application
-      - name: install dependencies
-        run: mvn clean install
-
-      # Step 5: install 
       - name: Maven Test
-        run: mvn test
+        run: mvn clean test
 
-      # Step 5: Run Unit Tests
-      - name: Maven Test
-        run: mvn test
-      # Step 7: Upload Build Artifact
+  # CI Stage 2: Maven Build
+  maven-build:
+    name: Maven Build
+    needs: maven-test
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: temurin
+          cache: maven
+
+      - name: Maven Package
+        run: mvn clean package -DskipTests
+
       - name: Upload JAR Artifact
         uses: actions/upload-artifact@v4
         with:
           name: maven-build
           path: target/*.jar
-  
-  maven-build:
-    needs:  maven-test
-    name: Maven build
-    runs-on: ubuntu-latest
-    steps:
-      # Step 1: Checkout source code
-      - name: Checkout Code
-        uses: actions/checkout@v4
 
-      # Step 2: Set up Java
-      - name: Setup JDK 17
-        uses: actions/setup-java@v4
-        with:
-          java-version: '17'
-          distribution: 'temurin'
-          cache: maven
-
-      - name: maven build
-        run: mvn clean package
-
-  # DEV Deployment
+  # CD Stage 1: DEV
   deploy-dev:
-    needs: maven-build
     name: Deploy to DEV
-    if: >
-      github.event.workflow_run.head_branch == 'develop'
+    needs: maven-build
+    if: github.ref_name == 'develop'
     runs-on: ubuntu-latest
     environment: dev
 
     steps:
-      - name: Download Build Artifact
+      - name: Download Artifact
         uses: actions/download-artifact@v4
         with:
           name: maven-build
           path: ./artifact
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          run-id: ${{ github.event.workflow_run.id }}
 
-      - name: Deploy to DEV
+      - name: Deploy DEV
         run: |
-          echo "Deploying application to DEV"
+          echo "Deploying to DEV"
           ls -l ./artifact
 
-  # QA Deployment
+  # CD Stage 2: QA
   deploy-qa:
     name: Deploy to QA
     needs: maven-build
-    if: >
-      github.event.workflow_run.head_branch == 'qa'
+    if: github.ref_name == 'qa'
     runs-on: ubuntu-latest
     environment: qa
 
     steps:
-      - name: Download Build Artifact
+      - name: Download Artifact
         uses: actions/download-artifact@v4
         with:
           name: maven-build
           path: ./artifact
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          run-id: ${{ github.event.workflow_run.id }}
 
-      - name: Deploy to QA
+      - name: Deploy QA
         run: |
-          echo "Deploying application to QA"
+          echo "Deploying to QA"
           ls -l ./artifact
 
-  # Production Deployment
+  # CD Stage 3: UAT
+  deploy-uat:
+    name: Deploy to UAT
+    needs: maven-build
+    if: github.ref_name == 'uat'
+    runs-on: ubuntu-latest
+    environment: uat
+
+    steps:
+      - name: Download Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: maven-build
+          path: ./artifact
+
+      - name: Deploy UAT
+        run: |
+          echo "Deploying to UAT"
+          ls -l ./artifact
+
+  # CD Stage 4: Production
   deploy-prod:
     name: Deploy to Production
     needs: maven-build
-    if: >
-      github.event.workflow_run.head_branch == 'main'
+    if: github.ref_name == 'main'
     runs-on: ubuntu-latest
     environment: production
 
     steps:
-      - name: Download Build Artifact
+      - name: Download Artifact
         uses: actions/download-artifact@v4
         with:
           name: maven-build
           path: ./artifact
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          run-id: ${{ github.event.workflow_run.id }}
 
-      - name: Deploy to Production
+      - name: Deploy Production
         run: |
-          echo "Deploying application to Production"
+          echo "Deploying to Production"
           ls -l ./artifact
